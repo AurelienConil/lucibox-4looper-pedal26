@@ -5,6 +5,7 @@ Wants=jack.service
 
 [Service]
 User=patch
+Environment=JACK_PROMISCUOUS_SERVER=jack
 WorkingDirectory=/home/patch/lucibox/puredata
 ExecStart=/home/patch/lucibox/script/autostart.sh
 Restart=on-failure
