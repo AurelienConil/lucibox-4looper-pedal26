@@ -1,21 +1,57 @@
-# Connect to ssh
+# Services Lucibox sur Raspberry Pi
 
+## Connexion SSH
+
+```bash
 ssh patch@patchbox.local
+# password : raspberry
+```
 
-password : raspberry
+## Installation des services (première fois)
 
+Copier les fichiers service dans systemd, puis activer :
 
+```bash
+sudo cp ~/lucibox/script/lucibox-pd.service /etc/systemd/system/
+sudo cp ~/lucibox/script/lucibox-node.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable lucibox-pd.service lucibox-node.service
+sudo systemctl start lucibox-pd.service lucibox-node.service
+```
 
-# Stop services
+## Mise à jour des services
 
-patch@patchbox(rw):~$ systemctl --user stop lucibox-pd.service
-patch@patchbox(rw):~$ systemctl --user stop lucibox-node.service
+Si les fichiers `.service` sont modifiés dans le repo :
 
+```bash
+sudo cp ~/lucibox/script/lucibox-pd.service /etc/systemd/system/
+sudo cp ~/lucibox/script/lucibox-node.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl restart lucibox-pd.service lucibox-node.service
+```
 
-# Services journal
+## Commandes courantes
 
-journalctl --user-unit=lucibox-node.service
-journalctl --user-unit=lucibox-node.service --follow
+```bash
+# Statut
+sudo systemctl status lucibox-pd.service
+sudo systemctl status lucibox-node.service
 
- 
+# Stop / Start
+sudo systemctl stop lucibox-pd.service lucibox-node.service
+sudo systemctl start lucibox-pd.service lucibox-node.service
 
+# Logs
+journalctl -u lucibox-pd.service -f
+journalctl -u lucibox-node.service -f
+
+# Ordre de démarrage au boot
+systemd-analyze critical-chain lucibox-pd.service
+```
+
+## Dépendances
+
+| Service | Attend |
+|---|---|
+| `lucibox-pd.service` | `jack.service` (JACK démarre en premier) |
+| `lucibox-node.service` | `network.target` + `lucibox-pd.service` |
