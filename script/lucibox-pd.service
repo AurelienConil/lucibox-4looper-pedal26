@@ -10,6 +10,9 @@ WorkingDirectory=/home/patch/lucibox/puredata
 ExecStart=/home/patch/lucibox/script/autostart.sh
 Restart=on-failure
 RestartSec=5
+CPUSchedulingPolicy=fifo
+CPUSchedulingPriority=70
+LimitMEMLOCK=infinity
 
 [Install]
 WantedBy=multi-user.target
