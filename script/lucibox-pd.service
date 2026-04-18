@@ -13,6 +13,8 @@ RestartSec=5
 CPUSchedulingPolicy=fifo
 CPUSchedulingPriority=70
 LimitMEMLOCK=infinity
+AmbientCapabilities=CAP_SYS_NICE
+SecureBits=keep-caps
 
 [Install]
 WantedBy=multi-user.target

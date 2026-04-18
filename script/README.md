@@ -116,14 +116,28 @@ uname -a           # doit contenir "PREEMPT_RT" ou "PREEMPT RT"
 cat /sys/kernel/realtime   # doit afficher "1"
 ```
 
-### 5. Lancer pd avec priorité RT explicite (`chrt`)
+### 5. Priorité RT gérée par systemd (pas par `chrt` ni `-rt`)
 
-Le flag `-rt` de pd peut échouer silencieusement dans systemd.
-Le script `autostart.sh` utilise `chrt -f 70` pour forcer SCHED_FIFO avant l'exec :
+Le flag `-rt` de pd et `chrt` échouent tous deux quand le process tourne sous un user non-root dans systemd (erreur `Operation not permitted`).
 
-```bash
-# Dans autostart.sh :
-exec chrt -f 70 pd -nogui -jack _main.pd
+La solution correcte est de déléguer le RT à systemd dans `lucibox-pd.service` :
+
+```ini
+CPUSchedulingPolicy=fifo
+CPUSchedulingPriority=70
+LimitMEMLOCK=infinity
+AmbientCapabilities=CAP_SYS_NICE
+SecureBits=keep-caps
+```
+
+- `CPUSchedulingPolicy=fifo` + `CPUSchedulingPriority=70` : systemd applique SCHED_FIFO avant l'exec (droits root)
+- `LimitMEMLOCK=infinity` : permet à JACK de verrouiller sa mémoire en RAM
+- `AmbientCapabilities=CAP_SYS_NICE` : permet à pd de configurer ses threads JACK clients en RT en interne
+
+Résultat attendu (`ps -eLo pid,comm,cls,rtprio`) :
+```
+jackd   FF  95   ← serveur JACK
+pd      FF   6   ← thread audio client JACK (priorité assignée par le serveur)
 ```
 
 ---
@@ -157,10 +171,10 @@ sudo -u patch bash -c "ulimit -a" | grep -E 'real-time|memory'
 
 ```bash
 # Logs en temps réel
-journalctl -u lucibox-pd.service -f | grep -i xrun
+journalctl -u jack.service -f | grep -i xrun
 
 # Xruns depuis le démarrage
-journalctl -u lucibox-pd.service --no-pager | grep -c xrun
+journalctl -u jack.service --no-pager | grep -c xrun
 ```
 
 ### Tester la latence RT du noyau (outil de référence)
