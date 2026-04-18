@@ -1,0 +1,8 @@
+#N canvas 172 553 300 185 12;
+#X obj 59 38 sv tempo_isplaying;
+#X obj 59 70 sel 1;
+#X obj 59 111 bang;
+#X obj 59 160 outlet;
+#X connect 0 0 1 0;
+#X connect 1 0 2 0;
+#X connect 2 0 3 0;

@@ -1,0 +1,31 @@
+#N canvas 856 263 717 483 10;
+#X obj 284 17 inlet;
+#X obj 148 187 bng 40 1000 500 0 empty empty EMPTY 17 7 0 10 -4034
+-1 -1;
+#X obj 222 187 bng 40 1000 500 0 empty empty RECORDING 17 7 0 10 -4034
+-1 -1;
+#X obj 312 188 bng 40 1000 500 0 empty empty playing 17 7 0 10 -4034
+-1 -1;
+#X obj 398 189 bng 40 1000 500 0 empty empty overdubing 17 7 0 10 -4034
+-1 -1;
+#X obj 281 345 s \$1_\$2_action;
+#X msg 164 278 start_rec;
+#X msg 231 278 stop_rec;
+#X msg 310 277 start_overdub;
+#X msg 405 278 stop_overdub;
+#X obj 284 71 extra/visual_tester_state_int \$1 \$2;
+#X obj 284 38 sel 0;
+#X connect 0 0 11 0;
+#X connect 1 0 6 0;
+#X connect 2 0 7 0;
+#X connect 3 0 8 0;
+#X connect 4 0 9 0;
+#X connect 6 0 5 0;
+#X connect 7 0 5 0;
+#X connect 8 0 5 0;
+#X connect 9 0 5 0;
+#X connect 10 0 1 0;
+#X connect 10 1 2 0;
+#X connect 10 2 3 0;
+#X connect 10 4 4 0;
+#X connect 11 1 10 0;

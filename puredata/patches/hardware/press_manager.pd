@@ -1,0 +1,88 @@
+#N canvas 306 184 744 591 10;
+#X obj 221 241 timer;
+#X obj 222 180 sel 0;
+#X obj 256 210 bang;
+#X obj 220 359 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 449 163 sel 0;
+#X obj 467 300 i 0;
+#X obj 467 331 sel 0;
+#X obj 500 373 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 251 357 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 467 371 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 220 317 sel 0 1;
+#X obj 520 295 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 527 221 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 513 257 delay 1000;
+#X obj 220 285 > 1000;
+#X floatatom 274 285 12 0 0 0 - - -;
+#X obj 222 121 i 0;
+#X obj 40 0 inlet;
+#X obj -22 118 sel 0;
+#X text 30 445 Simple press;
+#X text 198 443 Simple release;
+#X text 343 459 long press;
+#X obj 186 470 bang;
+#X obj 26 474 bang;
+#X obj 302 478 bang;
+#X obj 186 493 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 26 497 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X obj 302 500 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 40 23 extra/sv_tester tempo_isplaying;
+#X obj 440 475 bang;
+#X obj 440 497 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X text 474 458 long press release;
+#X obj 26 520 outlet;
+#X obj 186 517 outlet;
+#X obj 302 521 outlet;
+#X obj 440 520 outlet;
+#X obj -42 59 extra/sv_tester \$1_\$2_is_loop_recorded;
+#X text 258 25 Why tempo is playing. The first loop ( tempo off )need
+a very accurate timing -> tap is a simple press;
+#X text 264 66 When tempo is playing \, short or long press is calculated
+according to the release time;
+#X connect 0 0 14 0;
+#X connect 0 0 15 0;
+#X connect 1 0 0 1;
+#X connect 1 1 2 0;
+#X connect 2 0 0 0;
+#X connect 3 0 23 0;
+#X connect 4 1 12 0;
+#X connect 5 0 6 0;
+#X connect 6 0 9 0;
+#X connect 6 1 7 0;
+#X connect 7 0 24 0;
+#X connect 8 0 29 0;
+#X connect 10 0 3 0;
+#X connect 10 1 8 0;
+#X connect 12 0 13 0;
+#X connect 13 0 5 0;
+#X connect 13 0 11 0;
+#X connect 14 0 10 0;
+#X connect 16 0 1 0;
+#X connect 16 0 4 0;
+#X connect 16 0 5 1;
+#X connect 17 0 28 0;
+#X connect 18 0 22 0;
+#X connect 18 1 23 0;
+#X connect 22 0 25 0;
+#X connect 23 0 26 0;
+#X connect 24 0 27 0;
+#X connect 25 0 33 0;
+#X connect 26 0 32 0;
+#X connect 27 0 34 0;
+#X connect 28 0 36 0;
+#X connect 28 1 16 0;
+#X connect 29 0 30 0;
+#X connect 30 0 35 0;
+#X connect 36 0 18 0;
+#X connect 36 1 16 0;

@@ -1,0 +1,8 @@
+#N canvas 669 230 450 300 12;
+#X obj 104 118 vu 15 120 empty empty -1 -8 0 10 #404040 #000000 1 0;
+#X obj 165 117 vu 15 120 empty empty -1 -8 0 10 #404040 #000000 1 0;
+#X obj 14 -109 r mic_prevumetre;
+#X obj 139 -110 r mic_volume_vumetre;
+#X connect 2 0 0 0;
+#X connect 3 0 1 0;
+#X coords 0 -1 1 1 85 150 1 100 100;

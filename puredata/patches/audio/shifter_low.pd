@@ -1,0 +1,93 @@
+#N canvas 743 212 731 710 12;
+#X declare -stdpath ./;
+#X obj 90 516 hip~ 5;
+#X obj 157 231 osc~;
+#X obj 89 232 *~;
+#X obj 134 83 mtof;
+#X obj 157 208 *;
+#X msg 206 156 0.5;
+#X floatatom 206 185 3 0 0 0 - - -;
+#X obj 90 255 *~ 2;
+#X obj 206 131 loadbang;
+#N canvas 505 153 576 337 delay 0;
+#X obj 43 250 outlet~;
+#X obj 42 38 inlet~;
+#X obj 43 119 loadbang;
+#X obj 43 145 samplerate~;
+#X text 194 59 write to delay line which has enough memory to hold
+40 msec, f 30;
+#X text 153 145 get sample rate at load time;
+#X text 186 174 divide 1024 by sample rate to give time in seconds
+\; multiply by 1000 to convert to milliseconds.;
+#X text 196 225 read from the delay line at the calculated delay;
+#X text 272 274 1024-sample delay;
+#X obj 43 180 expr 1000*512/$f1;
+#X obj 119 112 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 42 66 delwrite~ E03-del\$0 40;
+#X obj 43 223 delread~ E03-del\$0;
+#X connect 1 0 11 0;
+#X connect 2 0 3 0;
+#X connect 3 0 9 0;
+#X connect 9 0 12 0;
+#X connect 10 0 3 0;
+#X connect 12 0 0 0;
+#X restore 43 124 pd delay;
+#X text 185 334 This patch demonstrates using ring modulation to alias
+a sound down one octave. The ring modulation itself ("osc~" and multiplier)
+is easy. (We step it up by a factor of 2 to balance the original better.)
+, f 70;
+#X text 187 538 About fiddle~ \, suffice it to say that the third outlet
+contains (pitch \, amplitude) pairs. We unpack the pitch and strip
+out any zeros (when fiddle~ fails to find a pitch it outputs zero but
+we'd rather stick with the most recent good one). This is converted
+from MIDI to Hertz \, and multiplied by 1/2 to control the modulation
+oscillator. (You can also try large-ish integers which leave the pitch
+intact but introduce funny formants.), f 70;
+#X text 277 156 <= choose an effect;
+#X obj 502 25 declare -stdpath ./;
+#X text 496 655 updated for Pd version 0.51;
+#X text 273 79 track pitch;
+#X text 192 105 reject low numbers indicating no pitch found;
+#X text 186 386 Harder is getting the fundamental frequency of the
+original sound. We do this with the complicated "sigmund~" object \,
+which puts out a stream of analysis data for an incoming signal. The
+"-npts 2048" argument specifies the analysis window size. The analysis
+is most closely aligned with what the sound was doing at the middle
+of the window \, i.e. \, 1024 samples ago. The "pd delay" window delays
+the signal itself 1024 samples so it will be as tightly synchronized
+with the analysis data as possible. (If you're doing this on a real-time
+input \, you might drop the delay and settle for less perfect synchronization.)
+, f 70;
+#X text 89 16 OCTAVE DIVIDING BY RING MODULATION;
+#X obj 90 468 *~;
+#X msg 243 152 4;
+#X obj 49 38 inlet~;
+#X obj 134 58 extra/sv pitch;
+#X obj 110 391 inlet;
+#X obj 110 443 line~;
+#X msg 110 414 \$1 10;
+#X obj 89 550 outlet~;
+#X obj 132 128 / \$1;
+#X obj 158 516 hip~ 5;
+#X obj 157 550 outlet~;
+#X connect 0 0 26 0;
+#X connect 1 0 2 1;
+#X connect 2 0 7 0;
+#X connect 3 0 27 0;
+#X connect 4 0 1 0;
+#X connect 5 0 6 0;
+#X connect 6 0 4 1;
+#X connect 7 0 19 0;
+#X connect 7 0 28 0;
+#X connect 8 0 5 0;
+#X connect 9 0 2 0;
+#X connect 19 0 0 0;
+#X connect 20 0 6 0;
+#X connect 21 0 9 0;
+#X connect 22 0 3 0;
+#X connect 23 0 25 0;
+#X connect 24 0 19 1;
+#X connect 25 0 24 0;
+#X connect 27 0 4 0;
+#X connect 28 0 29 0;

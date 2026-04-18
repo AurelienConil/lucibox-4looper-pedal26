@@ -1,0 +1,14 @@
+#N canvas 37 60 957 786 10;
+#X declare -path ../;
+#X obj 102 101 cnv 15 80 30 empty \$0_bgcnv REVERB 2 12 0 18 -262144
+-66577 0;
+#X obj -116 -23 declare -path ../;
+#X obj 111 135 vsl 15 128 0 120 0 0 empty empty dry/wet 0 -9 0 10 -262144
+-1 -1 0 1;
+#X obj 36 290 extra/sv reverb_drywet;
+#X obj 206 290 extra/sv reverb_room;
+#X obj 156 136 vsl 15 128 0 100 0 0 empty empty room 0 -9 0 10 -262144
+-1 -1 0 1;
+#X connect 2 0 3 1;
+#X connect 5 0 4 1;
+#X coords 0 -1 1 1 82 170 2 100 100;

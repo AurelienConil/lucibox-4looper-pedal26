@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucibox Control Panel</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            color: white;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .section h2 {
+            margin-top: 0;
+            color: #ffffff;
+            font-size: 1.5em;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .cmd-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            color: white;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .cmd-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .cmd-button:active {
+            transform: translateY(0);
+        }
+        
+        .cmd-button.update {
+            background: linear-gradient(45deg, #4ecdc4, #26de81);
+        }
+        
+        .cmd-button.system {
+            background: linear-gradient(45deg, #fd79a8, #fdcb6e);
+        }
+        
+        .cmd-button.danger {
+            background: linear-gradient(45deg, #e84393, #d63031);
+        }
+        
+        .cmd-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status-panel {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .status-message {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        
+        .status-success {
+            background: rgba(76, 175, 80, 0.3);
+            border-left: 4px solid #4caf50;
+        }
+        
+        .status-error {
+            background: rgba(244, 67, 54, 0.3);
+            border-left: 4px solid #f44336;
+        }
+        
+        .status-info {
+            background: rgba(33, 150, 243, 0.3);
+            border-left: 4px solid #2196f3;
+        }
+        
+
+        
+        .connection-status {
+            z-index: 1000;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .connected {
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+        }
+        
+        .disconnected {
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+        }
+        
+        .version-info {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .version-info h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+        }
+        
+        .commit-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-bottom: 10px;
+            min-height: 20px;
+        }
+        
+        .commit-info .loading {
+            color: #aaa;
+            font-style: italic;
+        }
+        
+        .commit-info .commit-text {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">Disconnected</div>
+    
+    <div class="container">
+        <h1>🎵 Lucibox Control Panel</h1>
+        
+        <!-- Section Système -->
+        <div class="section">
+            <h2>⚙️ Système</h2>
+            
+            <!-- Informations version -->
+            <div class="version-info">
+                <h3>📝 Version actuelle</h3>
+                <div id="currentCommit" class="commit-info">
+                    <span class="loading">Chargement...</span>
+                </div>
+                <button class="cmd-button system" onclick="refreshCommitInfo()">
+                    � Actualiser
+                </button>
+            </div>
+            
+            <div class="button-grid">
+                <button class="cmd-button update" onclick="executeCommand('git_pull')">
+                    � Git Pull
+                </button>
+                <button class="cmd-button danger" onclick="executeCommand('reboot')">
+                    🔁 Reboot System
+                </button>
+                <button class="cmd-button danger" onclick="executeCommand('poweroff')">
+                    🔌 Shutdown
+                </button>
+                <button class="cmd-button system" onclick="updateStatus()">
+                    📊 Check Status
+                </button>
+            </div>
+        </div>
+        
+        <!-- Status Panel -->
+        <div class="section">
+            <h2>📝 Status</h2>
+            <div class="status-panel" id="statusPanel">
+                <div class="status-message status-info">Système prêt...</div>
+            </div>
+        </div>
+        
+        <!-- Section CPU et Température -->
+        <div class="section">
+            <h2>🌡️ CPU et Température</h2>
+            <div>
+                <label>
+                    <input type="checkbox" id="autoUpdate">
+                    Mise à jour automatique (toutes les 2 secondes)
+                </label>
+            </div>
+            <div id="cpuTempDisplay" style="font-size: 2em; text-align: center; margin-top: 20px;">
+                Chargement des données...
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script>
+        // Connexion Socket.IO et gestion des commandes système
+        const socket = io();
+        const statusPanel = document.getElementById('statusPanel');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const autoUpdateCheckbox = document.getElementById('autoUpdate');
+        const cpuTempDisplay = document.getElementById('cpuTempDisplay');
+
+        // Ajout d'un message dans le panneau de status
+        function addStatusMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `status-message status-${type}`;
+            messageDiv.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            statusPanel.appendChild(messageDiv);
+            statusPanel.scrollTop = statusPanel.scrollHeight;
+            if (statusPanel.children.length > 50) {
+                statusPanel.removeChild(statusPanel.firstChild);
+            }
+        }
+
+        // Gestion de la connexion Socket.IO
+        socket.on('connect', () => {
+            connectionStatus.textContent = 'Connected';
+            connectionStatus.className = 'connection-status connected';
+            addStatusMessage('Connecté au serveur', 'info');
+        });
+        socket.on('disconnect', () => {
+            connectionStatus.textContent = 'Disconnected';
+            connectionStatus.className = 'connection-status disconnected';
+            addStatusMessage('Déconnecté du serveur', 'error');
+        });
+        socket.on('server_message', (data) => {
+            addStatusMessage(`Serveur: ${data.message}`, 'info');
+        });
+        socket.on('notification', (data) => {
+            addStatusMessage(`Notification: ${data.text}`, 'info');
+        });
+        socket.on('error', (error) => {
+            addStatusMessage(`Erreur: ${error}`, 'error');
+        });
+
+        // Commandes système via Socket.IO
+        async function executeCommand(command) {
+            try {
+                const result = await requestCommand(command);
+                addStatusMessage(`✅ Commande "${command}" exécutée avec succès.`, 'success');
+                return result;
+            } catch (error) {
+                addStatusMessage(`❌ Erreur lors de l'exécution de "${command}": ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        async function updateCpuInfo() {
+            if (!autoUpdateCheckbox.checked) return;
+            try {
+                const { cpuUsage, temperature } = await executeCommand('cpu_temp');
+                cpuTempDisplay.textContent = `CPU: ${cpuUsage}% | Température: ${temperature}°C`;
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour CPU:', error);
+            }
+        }
+
+        async function updateStatus() {
+            try {
+                const status = await executeCommand('check_status');
+                console.log('Statut reçu:', status);
+                const statusMessage = document.createElement('div');
+                statusMessage.className = 'status-message status-info';
+                statusMessage.textContent = `Statut: ${JSON.stringify(status, null, 2)}`;
+                statusPanel.appendChild(statusMessage);
+                statusPanel.scrollTop = statusPanel.scrollHeight;
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour du statut:', error);
+            }
+        }
+
+        let cpuInterval = null;
+        function startCpuInterval() {
+            if (!cpuInterval) {
+                cpuInterval = setInterval(updateCpuInfo, 2000);
+            }
+        }
+        function stopCpuInterval() {
+            if (cpuInterval) {
+                clearInterval(cpuInterval);
+                cpuInterval = null;
+            }
+        }
+
+        autoUpdateCheckbox.addEventListener('change', function() {
+            if (autoUpdateCheckbox.checked) {
+                startCpuInterval();
+                updateCpuInfo();
+            } else {
+                stopCpuInterval();
+                cpuTempDisplay.textContent = 'Mise à jour désactivée';
+            }
+        });
+
+        if (autoUpdateCheckbox.checked) {
+            startCpuInterval();
+            updateCpuInfo();
+        } else {
+            cpuTempDisplay.textContent = 'Mise à jour désactivée';
+        }
+
+        function refreshCommitInfo() {
+            const commitElement = document.getElementById('currentCommit');
+            commitElement.innerHTML = '<span class="loading">Chargement...</span>';
+            executeCommand('git_commit')
+                .then(updateCommitDisplay)
+                .catch(() => {
+                    commitElement.innerHTML = '<span class="loading">Informations non disponibles</span>';
+                });
+        }
+
+        function updateCommitDisplay(commitInfo) {
+            const commitElement = document.getElementById('currentCommit');
+            if (commitInfo && commitInfo.commit) {
+                console.log('Mise à jour de la page avec le commit:', commitInfo.commit);
+                commitElement.innerHTML = `<span class="commit-text">${commitInfo.commit}</span>`;
+            } else {
+                console.log('Aucune information de commit disponible pour mise à jour.');
+                commitElement.innerHTML = '<span class="loading">Informations non disponibles</span>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            addStatusMessage('Interface chargée, connexion en cours...', 'info');
+            setTimeout(() => {
+                if (socket.connected) {
+                    refreshCommitInfo();
+                }
+            }, 1000);
+        });
+
+        async function requestCommand(command, params = {}) {
+            return new Promise((resolve, reject) => {
+                // Créer un listener unique pour cette commande
+                const responseHandler = (data) => {
+                    if (data.command === command) {
+                        // Retirer le listener après réception
+                        socket.off('command_response', responseHandler);
+                        
+                        if (data.success) {
+                            resolve(data.result);
+                        } else {
+                            reject(new Error(data.message || `Erreur lors de l'exécution de ${command}`));
+                        }
+                    }
+                };
+                
+                // Ajouter le listener avant d'envoyer la requête
+                socket.on('command_response', responseHandler);
+                
+                // Envoyer la requête
+                socket.emit('command_request', { command, params });
+                
+                // Timeout de sécurité (30 secondes)
+                setTimeout(() => {
+                    socket.off('command_response', responseHandler);
+                    reject(new Error(`Timeout: La commande ${command} n'a pas répondu dans les temps`));
+                }, 30000);
+            });
+        }
+    </script>
+</body>
+</html>

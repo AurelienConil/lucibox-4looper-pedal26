@@ -1,0 +1,43 @@
+#N canvas 954 131 865 650 10;
+#X obj 201 201 cnv 15 198 30 empty empty 4sampler_bank 20 12 0 14 -233017
+-66577 0;
+#X obj 338 239 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X obj 353 239 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X obj 368 239 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
+1;
+#X obj 258 437 s arduinoIN;
+#X obj 352 316 t b f;
+#X obj 376 354 t b f;
+#X obj 333 276 t b f;
+#X obj 334 59 extra/sv sampler4_bank;
+#X obj 337 115 == 0;
+#X obj 368 115 == 1;
+#X obj 400 115 == 2;
+#X obj 335 87 t f f f;
+#X obj 334 298 pack 2 4 0 f;
+#X obj 351 335 pack 2 4 1 f;
+#X obj 376 373 pack 2 4 2 f;
+#X text 460 217 ACT as a 3 led looper \, placed at the 4th position
+;
+#X connect 1 0 7 0;
+#X connect 2 0 5 0;
+#X connect 3 0 6 0;
+#X connect 5 0 14 0;
+#X connect 5 1 14 3;
+#X connect 6 0 15 0;
+#X connect 6 1 15 3;
+#X connect 7 0 13 0;
+#X connect 7 1 13 3;
+#X connect 8 0 12 0;
+#X connect 9 0 1 0;
+#X connect 10 0 2 0;
+#X connect 11 0 3 0;
+#X connect 12 0 9 0;
+#X connect 12 1 10 0;
+#X connect 12 2 11 0;
+#X connect 13 0 4 0;
+#X connect 14 0 4 0;
+#X connect 15 0 4 0;
+#X coords 0 -1 1 1 200 60 2 200 200;

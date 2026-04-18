@@ -1,0 +1,14 @@
+[Unit]
+Description=Lucibox PureData
+After=jack.service
+Wants=jack.service
+
+[Service]
+User=patch
+WorkingDirectory=/home/patch/lucibox/puredata
+ExecStart=/home/patch/lucibox/script/autostart.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

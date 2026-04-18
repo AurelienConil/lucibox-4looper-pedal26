@@ -1,0 +1,3 @@
+#N canvas 514 271 450 300 12;
+#X obj 129 103 fileplayer;
+#X obj 126 256 outlet~;

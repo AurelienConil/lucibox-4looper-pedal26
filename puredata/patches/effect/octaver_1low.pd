@@ -1,0 +1,17 @@
+#N canvas 45 38 551 424 12;
+#X obj 63 213 audio/shifter_low 1;
+#X obj 377 145 hsl 128 15 0 1 0 0 empty empty empty -2 -8 0 10 #fcfcfc #000000 #000000 0 1;
+#X obj 63 114 inlet~;
+#X obj 63 242 outlet~;
+#X obj 373 204 s low1;
+#X obj 193 179 r low1;
+#X obj 374 116 inlet;
+#X floatatom 374 175 5 0 0 0 - - - 0;
+#X obj 117 152 audio/pitch_light;
+#X connect 0 0 3 0;
+#X connect 1 0 7 0;
+#X connect 2 0 0 0;
+#X connect 2 0 8 0;
+#X connect 5 0 0 1;
+#X connect 6 0 1 0;
+#X connect 7 0 4 0;

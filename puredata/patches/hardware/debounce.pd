@@ -1,0 +1,18 @@
+#N canvas 224 177 450 372 12;
+#X obj 125 46 inlet;
+#X obj 162 103 tgl 15 0 empty empty empty 17 7 0 10 #fcfcfc #000000 #000000 0 1;
+#X obj 124 165 t a b b;
+#X msg 171 213 0;
+#X obj 124 276 outlet;
+#X msg 214 210 1;
+#X obj 124 130 spigot 1;
+#X obj 150 245 delay 110;
+#X connect 0 0 6 0;
+#X connect 1 0 6 1;
+#X connect 2 0 4 0;
+#X connect 2 1 7 0;
+#X connect 2 2 3 0;
+#X connect 3 0 1 0;
+#X connect 5 0 1 0;
+#X connect 6 0 2 0;
+#X connect 7 0 5 0;

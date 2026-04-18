@@ -1,0 +1,13 @@
+[Unit]
+Description=Lucibox Node.js bridge
+After=network.target lucibox-pd.service
+
+[Service]
+User=patch
+WorkingDirectory=/home/patch/lucibox/node
+ExecStart=/home/patch/lucibox/script/start-node.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
