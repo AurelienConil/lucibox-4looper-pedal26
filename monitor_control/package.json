@@ -1,0 +1,17 @@
+{
+  "name": "lucibox-monitor",
+  "version": "1.0.0",
+  "description": "TUI monitor for Lucibox RPi — SSH-based realtime service dashboard",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.11.0",
+    "ssh2": "^1.15.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
