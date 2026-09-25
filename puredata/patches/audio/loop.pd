@@ -444,7 +444,7 @@
 #X obj 469 714 tgl 15 0 empty empty empty 17 7 0 10 #fcfcfc #000000 #000000 0 1;
 #X obj 1033 125 tgl 15 0 empty empty empty 17 7 0 10 #fc0400 #000000 #000000 0 1;
 #X obj 1033 105 extra/sv \$1_\$2_loop_ledmono;
-#X obj 101 294 mylooper~, f 15;
+#X obj 101 294 myLooper~, f 15;
 #X msg -138 557 record;
 #X msg -143 600 play;
 #X msg -76 630 clear;
