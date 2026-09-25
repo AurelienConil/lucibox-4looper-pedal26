@@ -1,4 +1,4 @@
-#N canvas 555 128 843 756 10;
+#N canvas 329 128 1183 756 10;
 #X declare -path ../;
 #X obj -186 37 cnv 15 1200 70 empty empty FROM::INLET 20 12 0 14 #c4d8e0 #404040 0;
 #X obj 176 42 inlet;
@@ -12,7 +12,7 @@
 #X obj 202 108 extra/sv \$1_\$2_loop_recbutton;
 #X obj 421 113 extra/sv \$1_\$2_loop_playbutton;
 #X obj 1022 36 cnv 15 210 350 empty empty GUI 20 12 0 9 #fce0c4 #404040 0;
-#N canvas 370 58 797 727 ledoutrec 0;
+#N canvas 370 58 797 727 ledoutrec 1;
 #X msg 102 285 1;
 #X obj 102 447 tgl 15 0 empty empty empty 17 7 0 10 #fcfcfc #000000 #000000 0 1;
 #X obj 102 474 sel 1;
@@ -57,6 +57,7 @@
 #X connect 16 3 18 0;
 #X connect 16 4 17 0;
 #X connect 16 5 0 0;
+#X connect 16 7 17 0;
 #X connect 16 8 0 0;
 #X connect 17 0 14 0;
 #X connect 18 0 14 0;
@@ -340,7 +341,7 @@
 #X obj 721 135 extra/sv \$1_\$2_loop_monobutton;
 #X obj 690 197 tgl 35 0 empty empty empty 17 7 0 10 #00f8fc #000000 #000000 0 1;
 #X obj 690 248 manage_monobutton_\$5 \$1 \$2;
-#N canvas 852 191 660 451 manage_playbutton 1;
+#N canvas 852 191 660 451 manage_playbutton 0;
 #X obj 278 10 inlet;
 #X obj 277 44 bng 40 1000 500 0 empty empty empty 17 7 0 10 #fcfcfc #000000 #000000;
 #X obj 199 92 extra/sv \$1_\$2_state;
