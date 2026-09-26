@@ -8,7 +8,8 @@
 
 // Inclure les classes
 #include "Potentiometer.h"
-#include "Button.h"
+#include "ButtonShortPress.h"
+#include "ButtonLongPress.h"
 #include "ButtonFootHack.h"
 #include "LedStrip.h"
 

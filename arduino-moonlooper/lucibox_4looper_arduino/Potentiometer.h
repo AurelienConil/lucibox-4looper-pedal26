@@ -9,11 +9,11 @@
 
 struct Potentiometer {
   int pin;
-  String oscAddress;
+  const char* oscAddress;
   int currentValue;
   int lastSentValue;
   
-  Potentiometer(int p, String addr) : pin(p), oscAddress(addr), currentValue(0), lastSentValue(0) {}
+  Potentiometer(int p, const char* addr) : pin(p), oscAddress(addr), currentValue(0), lastSentValue(0) {}
   
   void init() {
     pinMode(pin, INPUT);

@@ -1,22 +1,27 @@
-#ifndef BUTTON_H
-#define BUTTON_H
+#ifndef BUTTONSHORTPRESS_H
+#define BUTTONSHORTPRESS_H
 
 #include "Arduino.h"
 
-struct Button {
+/*
+Simple momentary button.
+Sends one OSC message on press (value 1000) and one on release (value 0).
+*/
+
+struct ButtonShortPress {
   int pin;
-  String oscAddress;
+  const char* oscAddress;
   bool currentState;
   bool lastState;
-  
-  Button(int p, String addr) : pin(p), oscAddress(addr), currentState(false), lastState(false) {}
-  
+
+  ButtonShortPress(int p, const char* addr) : pin(p), oscAddress(addr), currentState(false), lastState(false) {}
+
   void init() {
     pinMode(pin, INPUT_PULLUP);
     currentState = !digitalRead(pin); // Logique inversée
     lastState = currentState;
   }
-  
+
   bool hasChanged() {
     bool newState = !digitalRead(pin);
     if (newState != currentState) {
@@ -25,7 +30,7 @@ struct Button {
     }
     return false;
   }
-  
+
   void sendOSC() {
     Serial.print(oscAddress);
     Serial.print(" ");

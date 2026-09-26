@@ -13,11 +13,11 @@ There is no release artefact.
 
 struct ButtonFootHack {
   int pin;
-  String oscAddress;
+  const char* oscAddress;
   bool currentState;
   bool lastState;
   
-  ButtonFootHack(int p, String addr) : pin(p), oscAddress(addr), currentState(false), lastState(false) {}
+  ButtonFootHack(int p, const char* addr) : pin(p), oscAddress(addr), currentState(false), lastState(false) {}
   
   void init() {
     pinMode(pin, INPUT_PULLUP);

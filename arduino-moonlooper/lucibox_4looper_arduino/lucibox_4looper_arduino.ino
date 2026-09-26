@@ -30,15 +30,15 @@ Potentiometer potars[] = {
   Potentiometer(A2, "/lucibox/potar3"),
 };
 
-Button buttons[] = {
-  
+ButtonLongPress buttons[] = {
 
-  Button(3, "/lucibox/loop/channel1/play"),
-  Button(5, "/lucibox/loop/channel2/play"),
-  Button(7, "/lucibox/loop/channel3/play"),
-  Button(9, "/lucibox/loop/channel4/play"),
-  Button(10, "/lucibox/global/play")
-  
+
+  ButtonLongPress(3, "/lucibox/loop/channel1/play", "/lucibox/loop/channel1/clear"),
+  ButtonLongPress(5, "/lucibox/loop/channel2/play", "/lucibox/loop/channel2/clear"),
+  ButtonLongPress(7, "/lucibox/loop/channel3/play", "/lucibox/loop/channel3/clear"),
+  ButtonLongPress(9, "/lucibox/loop/channel4/play", "/lucibox/loop/channel4/clear"),
+  ButtonLongPress(10, "/lucibox/global/play", "/lucibox/global/clear")
+
 };
 
 
@@ -126,6 +126,9 @@ void loop() {
   
   // Gestion des messages OSC entrants pour LEDs
   handleIncomingOSC();
+
+  // Anime le clignotement des LEDs du looper (si c'est la vue active)
+  ledStrip.tickLooperAnimation();
 
   // Heartbeat watchdog
   unsigned long now = millis();
@@ -238,17 +241,19 @@ void parseOSCMessage(String message) {
     Serial.println("# Init completed");
   }
   // -------------- LOOPER  ------------------------
-  else if(message.startsWith("/lucibox/led/strip/looper")) {  
+  else if(message.startsWith("/lucibox/led/strip/looper")) {
     // Pattern pour looper: affiche le statut des 4 channels
-    // Format attendu: "/lucibox/led/strip/looper looperchannel ledindex value"
+    // Format attendu: "/lucibox/led/strip/looper looperchannel ledindex value [mode]"
+    // mode (optionnel, defaut 0): 0=fixe, 1=blink infini,
+    //                             2=blink 500ms puis eteint, 3=blink 500ms puis allume
 
-    if(valueCount == 3) {
-      int index = values[0] - 1; // Channel1 is index0 
+    if(valueCount == 3 || valueCount == 4) {
+      int index = values[0] - 1; // Channel1 is index0
       int ledindex = values[1];
       int value = values[2];
+      int mode = (valueCount == 4) ? values[3] : 0;
 
-      if(index >= 0) ledStrip.set3DotsLooper(index, ledindex, value);
-      ledStrip.update3DotsLooper();
+      if(index >= 0) ledStrip.set3DotsLooper(index, ledindex, value, mode);
     }
   }
   else if(message.startsWith("/lucibox/led/strip/level")) {
