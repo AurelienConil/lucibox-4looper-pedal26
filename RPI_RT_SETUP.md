@@ -228,20 +228,22 @@ Sur Pi 3B + Pisound avec le noyau RT 5.15 de Patchbox : **82, 83** et **111**.
 sudo tee /usr/local/bin/audio-irq-prio.sh <<'EOF'
 #!/bin/sh
 # IRQ Pisound au-dessus de jackd (-P 80) : 82/83 = DMA I2S, 111 = SPI MIDI.
+n=0
 for irq in 82 83 111; do
-  for tid in $(pgrep "^irq/${irq}-"); do chrt -f -p 90 "$tid"; done
+  for tid in $(pgrep "^irq/${irq}-"); do chrt -f -p 90 "$tid" && n=$((n+1)); done
 done
+[ "$n" -ge 3 ] || { echo "audio-irq-prio: $n IRQ trouvees sur 3" >&2; exit 1; }
 EOF
 sudo chmod +x /usr/local/bin/audio-irq-prio.sh
 
 sudo tee /etc/systemd/system/audio-irq-prio.service <<'EOF'
 [Unit]
 Description=Priorite RT des IRQ audio Pisound
-After=sound.target
-Before=jack.service
+After=sound.target jack.service
 
 [Service]
 Type=oneshot
+RemainAfterExit=yes
 ExecStart=/usr/local/bin/audio-irq-prio.sh
 
 [Install]
