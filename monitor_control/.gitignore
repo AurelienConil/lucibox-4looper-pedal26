@@ -1,2 +1,4 @@
 monitor_config.json
 node_modules/
+**.bak
+

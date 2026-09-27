@@ -34,7 +34,7 @@
 //  - Kernel       : uname -r
 //  - CPU Governor : cat /sys/devices/system/cpu(star)/cpufreq/scaling_governor
 //  - Groups       : groups patch
-//  - RT Limits    : grep -E 'rtprio|memlock' /etc/security/limits.conf
+//  - RT Limits    : grep uncommented rtprio|memlock in limits.conf + limits.d/*.conf
 //  - Services     : systemctl is-active jack / lucibox-node / lucibox-pd
 //  - Serial port  : ls /dev/ttyACM* /dev/ttyUSB* 2>/dev/null
 //  - Sudoers      : sudo -n systemctl status 2>&1
@@ -48,7 +48,7 @@ const CHECKS = {
   kernel:      'uname -r',
   cpuGovernor: 'cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor',
   groups:      'groups patch',
-  rtLimits:    "grep -E 'rtprio|memlock' /etc/security/limits.conf",
+  rtLimits:    "grep -hsE '^[^#]*(rtprio|memlock)' /etc/security/limits.conf /etc/security/limits.d/*.conf; true",
   serviceJack: 'systemctl is-active jack.service',
   serviceNode: 'systemctl is-active lucibox-node.service',
   servicePd:   'systemctl is-active lucibox-pd.service',

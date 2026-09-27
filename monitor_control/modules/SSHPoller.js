@@ -78,13 +78,22 @@ class SSHPoller extends EventEmitter {
       try {
         value = this._parserFn(stdout);
       } catch (e) {
-        this.emit('error', e);
+        this._emitError(e);
         return;
       }
       this.emit('data', value);
     } catch (err) {
-      this.emit('error', err);
+      this._emitError(err);
     }
+  }
+
+  /**
+   * _emitError — Emit 'error' only if someone listens: an unhandled 'error'
+   * event would crash the process, and a failed poll is transient anyway.
+   * @private
+   */
+  _emitError(err) {
+    if (this.listenerCount('error') > 0) this.emit('error', err);
   }
 }
 

@@ -14,7 +14,7 @@
  *  - Git version                                       — on startup + after Git Pull
  *
  * From IMPL.md §A — CPU Usage: avoid top -bn1, prefer vmstat or /proc/stat.
- * From IMPL.md §B — use `pgrep -o -x pd` and `pgrep -o -f "node main.js"` (oldest, one PID guaranteed).
+ * From IMPL.md §B — use `pgrep -o -x pd` and `pgrep -o -x node` (oldest, one PID guaranteed).
  *
  * Emits:
  *  - 'services'    ({ jack, node, pd }: { [name]: 'active'|'inactive'|'failed' })
@@ -37,11 +37,13 @@ const INTERVAL_RT_PROCS_MS = 10000;
 // SSH commands
 const CMD_SERVICE = (name) => `systemctl is-active ${name}`;
 const CMD_CPU_TEMP = 'cat /sys/class/thermal/thermal_zone0/temp';
-// vmstat: 2 samples at 1-second interval — parse the last line for idle %
-// (from IMPL.md §A: prefer vmstat over top -bn1)
-const CMD_CPU_USAGE = 'vmstat 1 2 | tail -1';
-const CMD_RT_PD   = 'chrt -p $(pgrep -o -x pd)';
-const CMD_RT_NODE = 'chrt -p $(pgrep -o -f "node main.js")';
+// vmstat: 2 samples at 1-second interval — keep the column header + last line
+// so the parser can locate the "id" column (from IMPL.md §A: prefer vmstat over top -bn1)
+const CMD_CPU_USAGE = "vmstat 1 2 | sed -n '2p;$p'";
+// pd: the DSP runs in the JACK client thread, not the main thread (FIFO/6) —
+// report the thread with the highest RT priority.
+const CMD_RT_PD   = "chrt -p $(ps -L -o tid=,rtprio= -p $(pgrep -o -x pd) | sort -k2 -n | tail -1 | awk '{print $1}')";
+const CMD_RT_NODE = 'chrt -p $(pgrep -o -x node)';
 const CMD_VERSION = 'git -C /home/patch/lucibox log -1 --format="%h %s"';
 
 class StatusPoller extends EventEmitter {
@@ -96,7 +98,7 @@ class StatusPoller extends EventEmitter {
     // RT Processes (custom, not SSHPoller)
     const rtPoller = new SSHPoller(
       this._ssh,
-      `${CMD_RT_PD} && echo '---' && ${CMD_RT_NODE}`,
+      `${CMD_RT_PD}; echo '---'; ${CMD_RT_NODE}`,
       INTERVAL_RT_PROCS_MS,
       (stdout) => {
         // Split by ---

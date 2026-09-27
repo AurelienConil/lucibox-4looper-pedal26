@@ -60,140 +60,105 @@ systemd-analyze critical-chain lucibox-pd.service
 
 ## Configuration OS pour l'audio temps réel
 
-### 1. Groupes requis pour l'utilisateur `patch`
+La configuration complète du système est décrite à la racine du repo :
 
-```bash
-# Vérifier les groupes actuels
-groups patch
+- [`RPI_RT_SETUP.md`](../RPI_RT_SETUP.md) — installation depuis un Patchbox OS vierge ;
+- [`RPI_RT_UPDATE_LUCIBOX.md`](../RPI_RT_UPDATE_LUCIBOX.md) — réalignement du Pi déjà en service.
 
-# L'utilisateur doit appartenir à : audio, jack (et optionnellement realtime)
-sudo usermod -aG audio patch
-sudo usermod -aG jack patch
+Ce qui suit résume ce qui concerne directement ces services.
 
-# Appliquer sans reboot (ou reboot pour être sûr)
-newgrp audio
+### Priorités temps réel
+
+Ordre visé (du plus prioritaire au moins prioritaire) :
+
+```
+IRQ audio Pisound (DMA I2S + SPI)   FIFO 90   ← audio-irq-prio.service
+jackd                               FIFO 80   ← /etc/jackdrc : -R -P 80
+thread DSP de Pd (client JACK)      FIFO 75   (= priorité JACK − 5, fixé par libjack)
+autres IRQ (USB, Wi-Fi, SD…)        FIFO 50   (défaut du noyau RT)
+thread principal de Pd              FIFO bas  (fixé par Pd lui-même)
+node                                normal    (jamais en RT)
 ```
 
-### 2. Limites RT dans `/etc/security/limits.conf`
+Le DSP de Pd tourne dans le **thread client JACK**, pas dans le thread principal : c'est lui qu'il faut regarder.
 
-Vérifier que ces lignes sont présentes :
+### Limites RT dans `lucibox-pd.service`
 
-```bash
-cat /etc/security/limits.conf | grep -E 'audio|patch|rtprio|memlock'
-```
-
-Si manquantes, les ajouter :
-
-```bash
-sudo tee -a /etc/security/limits.conf <<EOF
-@audio   -  rtprio   95
-@audio   -  memlock  unlimited
-@jack    -  rtprio   95
-@jack    -  memlock  unlimited
-EOF
-```
-
-> Sur Patchbox OS, ces limites sont normalement déjà configurées dans `/etc/security/limits.d/`.
-
-### 3. Governor CPU en mode `performance`
-
-```bash
-# Vérifier
-cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
-
-# Forcer (temporaire, reboot remet ondemand)
-echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
-
-# Rendre permanent via /etc/rc.local ou un service systemd
-```
-
-### 4. Noyau PREEMPT_RT
-
-Patchbox OS embarque déjà un noyau RT. Vérifier :
-
-```bash
-uname -a           # doit contenir "PREEMPT_RT" ou "PREEMPT RT"
-cat /sys/kernel/realtime   # doit afficher "1"
-```
-
-### 5. Priorité RT gérée par systemd (pas par `chrt` ni `-rt`)
-
-Le flag `-rt` de pd et `chrt` échouent tous deux quand le process tourne sous un user non-root dans systemd (erreur `Operation not permitted`).
-
-La solution correcte est de déléguer le RT à systemd dans `lucibox-pd.service` :
+`/etc/security/limits.d/audio.conf` (`@audio - rtprio 95`, `@audio - memlock unlimited`) ne s'applique qu'aux sessions de login, **pas aux services systemd**. Les limites sont donc déclarées dans l'unit :
 
 ```ini
-CPUSchedulingPolicy=fifo
-CPUSchedulingPriority=70
+LimitRTPRIO=95
 LimitMEMLOCK=infinity
 AmbientCapabilities=CAP_SYS_NICE
 SecureBits=keep-caps
 ```
 
-- `CPUSchedulingPolicy=fifo` + `CPUSchedulingPriority=70` : systemd applique SCHED_FIFO avant l'exec (droits root)
-- `LimitMEMLOCK=infinity` : permet à JACK de verrouiller sa mémoire en RAM
-- `AmbientCapabilities=CAP_SYS_NICE` : permet à pd de configurer ses threads JACK clients en RT en interne
+- `LimitRTPRIO=95` : autorise Pd et libjack à passer leurs threads en SCHED_FIFO.
+- `LimitMEMLOCK=infinity` : autorise Pd à verrouiller sa mémoire en RAM (`mlockall`).
+- `AmbientCapabilities=CAP_SYS_NICE` : filet de sécurité pour changer les priorités sans être root.
+- Pas de `CPUSchedulingPolicy` / `CPUSchedulingPriority` : Pd et libjack fixent eux-mêmes leurs priorités, la valeur systemd serait écrasée.
 
-Résultat attendu (`ps -eLo pid,comm,cls,rtprio`) :
-```
-jackd   FF  95   ← serveur JACK
-pd      FF   6   ← thread audio client JACK (priorité assignée par le serveur)
+Le groupe `dialout` est nécessaire pour l'Arduino (`/dev/ttyACM0`) :
+
+```bash
+groups patch                          # audio, jack, dialout
+sudo usermod -aG audio,jack,dialout patch
 ```
 
 ---
 
 ## Diagnostic et vérification du temps réel
 
-### Vérifier que JACK et pd tournent en RT
+### Vérifier les priorités
 
 ```bash
-# Scheduling effectif de chaque process (FF = SCHED_FIFO = RT)
-ps -eLo pid,comm,cls,rtprio | grep -E 'jackd|pd'
-
-# Détail pour jackd
-chrt -p $(pgrep jackd)
-# attendu : SCHED_FIFO, priorité 95
-
-# Détail pour pd
-chrt -p $(pgrep -x pd)
-# attendu : SCHED_FIFO, priorité 70
+ps -eLo tid,cls,rtprio,comm | grep -E 'jackd|pd$|irq/(82|83|111)-' | grep FF
 ```
 
-### Vérifier les limites RT actives
+Attendu :
+```
+irq/82-DMA IRQ    FF 90
+irq/83-DMA IRQ    FF 90
+irq/111-3f20400   FF 90
+jackd             FF 80
+pd                FF 75    ← thread DSP (client JACK)
+pd                FF  6    ← thread principal
+```
+
+### Vérifier les limites effectives du process pd
 
 ```bash
-sudo -u patch bash -c "ulimit -a" | grep -E 'real-time|memory'
-# real-time priority (-r) doit être 95
-# max locked memory (-l) doit être unlimited
+grep -Ei 'realtime pri|locked' /proc/$(pgrep -o -x pd)/limits   # 95 / unlimited
+grep VmLck /proc/$(pgrep -o -x pd)/status                       # non nul
 ```
+
+(`ulimit -r` dans une session SSH montre les limites de session, pas celles du service.)
 
 ### Compter les xruns JACK
 
-```bash
-# Logs en temps réel
-journalctl -u jack.service -f | grep -i xrun
+`/etc/jackdrc` ne doit **pas** contenir `-s` (softmode) : il masque les xruns.
 
-# Xruns depuis le démarrage
-journalctl -u jack.service --no-pager | grep -c xrun
+```bash
+journalctl -u jack.service -f | grep -i xrun          # en direct
+journalctl -u jack.service -b | grep -ic xrun         # depuis le démarrage
 ```
 
-### Tester la latence RT du noyau (outil de référence)
+### Tester la latence du noyau
 
 ```bash
-# Installer si absent
 sudo apt install rt-tests
-
-# Lancer le test (30 secondes, priorité 80)
-sudo cyclictest -l 60000 -m -n -p 80 -i 500 --quiet
-# Max latency < 200µs = bon, > 1000µs = problème noyau
+sudo cyclictest -m -Sp90 -i200 -h400 -q -D 5m         # patch en jeu
+# max < ~100 µs = bon ; > 300 µs = IRQ ou service non maîtrisé
 ```
 
-### Résumé des causes fréquentes de xruns
+### Causes fréquentes de xruns
 
 | Cause | Vérification |
 |---|---|
-| `pd` en SCHED_OTHER (pas RT) | `chrt -p $(pgrep -x pd)` |
-| CPU en mode `ondemand` | `cat /sys/.../scaling_governor` |
-| Noyau non-RT | `cat /sys/kernel/realtime` |
-| `rtprio` manquant dans limits | `ulimit -r` |
-| Buffer JACK trop petit | `jack_control dg period` (essayer 256 → 512) |
+| Noyau non RT | `cat /sys/kernel/realtime` → 1 |
+| CPU pas en `performance` ou throttling | `cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor`, `vcgencmd get_throttled` → 0x0 |
+| Thread DSP de pd pas en FIFO | `ps -eLo tid,cls,rtprio,comm \| grep 'pd$'` → un FF 75 |
+| `LimitRTPRIO` absent de l'unit | `grep -i 'realtime pri' /proc/$(pgrep -x pd)/limits` → 95 |
+| IRQ audio sous les autres IRQ | `systemctl is-active audio-irq-prio`, priorités ci-dessus |
+| `[print]` en continu dans un patch | `journalctl -u lucibox-pd -f` doit rester calme |
+| Période JACK trop courte pour la charge | `/etc/jackdrc` : essayer `-p 256` |

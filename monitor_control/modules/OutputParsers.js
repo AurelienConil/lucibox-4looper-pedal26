@@ -16,7 +16,7 @@
  *  - parseKernelVersion — uname -r output                      → { version, isRealtime }
  *  - parseCpuGovernor  — cpufreq scaling_governor content      → string[]
  *  - parseGroups       — groups <user> output                  → string[]
- *  - parseRtLimits     — /etc/security/limits.conf grep output → { rtprio, memlock }
+ *  - parseRtLimits     — limits.conf + limits.d/*.conf grep output → { rtprio, memlock }
  *  - parseSerialPorts  — ls /dev/ttyACM* /dev/ttyUSB* output   → string[]
  *  - parseSudoersCheck — sudo -n output                        → boolean (NOPASSWD detected)
  */
@@ -45,15 +45,18 @@ class OutputParsers {
    * The last columns are: us sy id wa st
    * Usage = 100 - idle (id column)
    *
-   * @param {string} stdout — Full vmstat output (header + 2 data lines)
+   * @param {string} stdout — vmstat column header line + last data line
    * @returns {number} CPU usage percentage (0–100)
    */
   static parseCpuUsage(stdout) {
     const lines = stdout.trim().split(/\r?\n/);
-    const last = lines[lines.length - 1];
-    const cols = last.trim().split(/\s+/);
-    const idle = parseFloat(cols[cols.length - 5]); // id column
-    if (isNaN(idle)) throw new Error('Invalid CPU usage');
+    // The "id" position depends on the procps version (3.x ends with "id wa st",
+    // 4.x adds "gu"), so locate it from the header line.
+    const header = lines[0].trim().split(/\s+/);
+    const idCol = header.indexOf('id');
+    const cols = lines[lines.length - 1].trim().split(/\s+/);
+    const idle = parseFloat(cols[idCol]);
+    if (idCol < 0 || isNaN(idle)) throw new Error('Invalid CPU usage');
     return Math.round(100 - idle);
   }
   /**
@@ -159,7 +162,8 @@ class OutputParsers {
   }
 
   /**
-   * parseRtLimits — Parse grep output from /etc/security/limits.conf.
+   * parseRtLimits — Parse grep output from /etc/security/limits.conf and limits.d/*.conf
+   * (comment lines are filtered out by the grep).
    *
    * @param {string} stdout — Lines matching rtprio or memlock
    * @returns {{ rtprio: boolean, memlock: boolean }}

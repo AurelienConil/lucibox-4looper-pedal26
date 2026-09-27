@@ -43,6 +43,9 @@ class SSHManager extends EventEmitter {
     this._config = config;
     this._client = null;
 
+    // True only between the 'ready' event and the next 'error'/'close'
+    this._ready = false;
+
     // Whether the manager should attempt reconnections (false after explicit disconnect())
     this._shouldReconnect = true;
 
@@ -68,21 +71,29 @@ class SSHManager extends EventEmitter {
     if (this._client && this._client._sock && !this._client._sock.destroyed) {
       return;
     }
-    this._client = new Client();
-    this._client.on('ready', () => {
+    const client = new Client();
+    this._client = client;
+    this._ready = false;
+    client.on('ready', () => {
+      if (client !== this._client) return;
+      this._ready = true;
       this._resetBackoff();
       this.emit('connected');
       this._restoreStreams();
     });
-    this._client.on('error', (err) => {
+    client.on('error', (err) => {
+      if (client !== this._client) return;
+      this._ready = false;
       this.emit('disconnected', err);
       this._scheduleReconnect();
     });
-    this._client.on('close', () => {
+    client.on('close', () => {
+      if (client !== this._client) return;
+      this._ready = false;
       this.emit('disconnected');
       this._scheduleReconnect();
     });
-    this._client.connect(this._config);
+    client.connect(this._config);
   }
 
   /**
@@ -90,6 +101,7 @@ class SSHManager extends EventEmitter {
    */
   disconnect() {
     this._shouldReconnect = false;
+    this._ready = false;
     if (this._reconnectTimer) {
       clearTimeout(this._reconnectTimer);
       this._reconnectTimer = null;
@@ -204,7 +216,7 @@ class SSHManager extends EventEmitter {
    * @returns {boolean}
    */
   isConnected() {
-    return this._client && this._client._sock && !this._client._sock.destroyed;
+    return this._ready;
   }
 }
 
